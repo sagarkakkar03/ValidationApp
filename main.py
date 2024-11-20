@@ -79,7 +79,7 @@ def check_for_final_decimal(initial_value, final_value):
     else:
         if count_decimal_places(initial_value) > 2:
             if initial_value < 0.01:
-                return sigfig(initial_value, 2) == sigfig.round(final_value, 2)
+                return sigfig.round(initial_value, 2) == sigfig.round(final_value, 2)
             return abs(initial_value - final_value) < 0.01
         else:
             return False
@@ -89,7 +89,7 @@ def check_for_decimals(initial_value, final_value):
     else:
         if count_decimal_places(initial_value) > 2:
             if initial_value < 0.01:
-                return sigfig(initial_value, 2) == sigfig.round(final_value, 2)
+                return sigfig.round(initial_value, 2) == sigfig.round(final_value, 2)
             return abs(initial_value - final_value) < 0.00001
         else:
             return False
