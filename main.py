@@ -73,7 +73,7 @@ def balanced_parenthesis(myStr):
         return False
 
 # Define function to check decimals between two values
-def check_for_decimals(initial_value, final_value):
+def check_for_final_decimal(initial_value, final_value):
     if initial_value == final_value:
         return True
     else:
@@ -81,6 +81,16 @@ def check_for_decimals(initial_value, final_value):
             if initial_value < 0.01:
                 return sigfig(initial_value, 2) == sigfig.round(final_value, 2)
             return abs(initial_value - final_value) < 0.01
+        else:
+            return False
+def check_for_decimals(initial_value, final_value):
+    if initial_value == final_value:
+        return True
+    else:
+        if count_decimal_places(initial_value) > 2:
+            if initial_value < 0.01:
+                return sigfig(initial_value, 2) == sigfig.round(final_value, 2)
+            return abs(initial_value - final_value) < 0.00001
         else:
             return False
 
@@ -94,6 +104,7 @@ def validate_steps_with_highlight(steps):
         for calc in calculations:
             flag = flag&balanced_parenthesis(calc)
             calc = adjusted_string(calc)
+            # st.markdown(calc)
             try:
                 checks.append(float(eval(calc)))
             except:
@@ -101,7 +112,9 @@ def validate_steps_with_highlight(steps):
                     checks.append(float(calc))
                 except Exception as e:
                     pass
+
         st.markdown(checks)
+
         initial = None
         if len(checks) > 1:
             last = checks[-1]
@@ -110,10 +123,10 @@ def validate_steps_with_highlight(steps):
                     initial = current_val
                 elif current_val == last:
                     # check for decimals
-                    flag = flag&check_for_decimals(initial, current_val)
+                    flag = flag&check_for_final_decimal(initial, current_val)
                 else:
                     if initial != current_val:
-                        flag = False
+                        flag = flag&check_for_decimals(initial, current_val)
 
         if flag:
             results.append((row, "Correct"))
