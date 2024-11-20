@@ -26,6 +26,7 @@ def preprocess_absolute(expr):
         else:
             find_abs(expr, curr + 1, count)
     ans = None
+
     find_abs(expr, 0, 0)
     for i in allpossibilities:
         try:
@@ -47,6 +48,7 @@ def adjusted_string(calc):
     calc = calc.replace(':', '/')
     calc = calc.replace("$", '')
     calc = calc.replace('%', '')
+    calc = calc.replace("−", "-")
     calc = preprocess_absolute(calc)
     return calc
 
@@ -72,6 +74,14 @@ def balanced_parenthesis(myStr):
     else:
         return False
 
+#later
+def handle_root(string):
+    for i in range(string):
+        stack = []
+        if string[i] =='√':
+            stack.append(1)
+    return
+
 # Define function to check decimals between two values
 def check_for_final_decimal(initial_value, final_value):
     if initial_value == final_value:
@@ -79,7 +89,7 @@ def check_for_final_decimal(initial_value, final_value):
     else:
         if count_decimal_places(initial_value) > 2:
             if initial_value < 0.01:
-                return sigfig.round(initial_value, 2) == sigfig.round(final_value, 2)
+                return sigfig(initial_value, 2) == sigfig.round(final_value, 2)
             return abs(initial_value - final_value) < 0.01
         else:
             return False
@@ -89,7 +99,7 @@ def check_for_decimals(initial_value, final_value):
     else:
         if count_decimal_places(initial_value) > 2:
             if initial_value < 0.01:
-                return sigfig.round(initial_value, 2) == sigfig.round(final_value, 2)
+                return sigfig(initial_value, 2) == sigfig.round(final_value, 2)
             return abs(initial_value - final_value) < 0.00001
         else:
             return False
@@ -104,7 +114,6 @@ def validate_steps_with_highlight(steps):
         for calc in calculations:
             flag = flag&balanced_parenthesis(calc)
             calc = adjusted_string(calc)
-            # st.markdown(calc)
             try:
                 checks.append(float(eval(calc)))
             except:
