@@ -1,5 +1,4 @@
 import streamlit as st
-from simpleeval import simple_eval
 import sigfig
 
 # Define function to count decimal places
@@ -9,6 +8,69 @@ def count_decimal_places(num):
         return len(num_str.split('.')[1])
     return 0
 
+# Preprocess absolute
+def preprocess_absolute(expr):
+    allpossibilities = []
+
+    def find_abs(expr, curr, count):
+        nonlocal allpossibilities
+        if curr == len(expr):
+            if count == 0:
+                allpossibilities.append(expr)
+
+            return
+        if expr[curr] == "|":
+            find_abs(expr[:curr] + "abs(" + expr[curr + 1:], curr + 1, count + 1)
+            if count > 0:
+                find_abs(expr[:curr] + ")" + expr[curr + 1:], curr + 1, count - 1)
+        else:
+            find_abs(expr, curr + 1, count)
+    ans = None
+    find_abs(expr, 0, 0)
+    for i in allpossibilities:
+        try:
+            eval(i)
+            return i
+        except:
+            pass
+    return
+
+# Replacing stings
+def adjusted_string(calc):
+    calc = calc.strip()
+    calc = calc.replace('{', '(')
+    calc = calc.replace('[', '(')
+    calc = calc.replace('}', ')')
+    calc = calc.replace(']', ')')
+    calc = calc.replace('^', '**')
+    calc = calc.replace('×', "*")
+    calc = calc.replace(':', '/')
+    calc = calc.replace("$", '')
+    calc = calc.replace('%', '')
+    calc = preprocess_absolute(calc)
+    return calc
+
+
+open_list = ["[", "{", "("]
+close_list = ["]", "}", ")"]
+
+# Function to check parentheses
+def balanced_parenthesis(myStr):
+    stack = []
+    for i in myStr:
+        if i in open_list:
+            stack.append(i)
+        elif i in close_list:
+            pos = close_list.index(i)
+            if ((len(stack) > 0) and
+                    (open_list[pos] == stack[len(stack) - 1])):
+                stack.pop()
+            else:
+                return False
+    if len(stack) == 0:
+        return True
+    else:
+        return False
 
 # Define function to check decimals between two values
 def check_for_decimals(initial_value, final_value):
@@ -30,24 +92,16 @@ def validate_steps_with_highlight(steps):
         calculations = list(row.split("="))
         checks = []
         for calc in calculations:
-            calc = calc.strip()
-            new_calc = ""
-            for text in calc:
-                if text == "{" or text == "[":
-                    new_calc += "("
-                elif text == "}" or text == "]":
-                    new_calc += ")"
-                else:
-                    new_calc += text
-            calc = new_calc
+            flag = flag&balanced_parenthesis(calc)
+            calc = adjusted_string(calc)
             try:
-                checks.append(float(simple_eval(calc)))
+                checks.append(float(eval(calc)))
             except:
                 try:
                     checks.append(float(calc))
                 except Exception as e:
                     pass
-
+        st.markdown(checks)
         initial = None
         if len(checks) > 1:
             last = checks[-1]
@@ -68,7 +122,7 @@ def validate_steps_with_highlight(steps):
     return results
 
 # Streamlit Interface
-st.title("Step-by-Step Calculation Validator with Highlighting")
+st.title("Step-by-Step Calculation Validator")
 
 st.write("Enter each step of your calculation in the format `expression = result` (e.g., `a + b = 47`). Separate steps with a newline.")
 steps_input = st.text_area("Enter your calculations:", height=200)
