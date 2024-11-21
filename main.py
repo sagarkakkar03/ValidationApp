@@ -1,5 +1,6 @@
 import streamlit as st
 import sigfig
+from decimal import Decimal, ROUND_HALF_UP
 
 # Define function to count decimal places
 def count_decimal_places(num):
@@ -7,6 +8,30 @@ def count_decimal_places(num):
     if '.' in num_str:
         return len(num_str.split('.')[1])
     return 0
+
+
+def replace_square_root(expression):
+    """
+    Replaces square root symbols (√) in the expression with Python's '**0.5'.
+    """
+    # Iterate through the expression to replace occurrences of √
+    while '√' in expression:
+        # Find the index of the square root symbol
+        index = expression.find('√')
+
+        # Extract the number after the square root
+        start = index + 1  # Start after '√'
+        end = start
+
+        # Find where the number ends (assume no space in between)
+        while end < len(expression) and (expression[end].isdigit() or expression[end] == '.'):
+            end += 1
+
+        # Replace √N with (N)**0.5
+        number = expression[start:end]
+        expression = expression[:index] + f"({number})**0.5" + expression[end:]
+
+    return expression
 
 # Preprocess absolute
 def preprocess_absolute(expr):
@@ -17,7 +42,6 @@ def preprocess_absolute(expr):
         if curr == len(expr):
             if count == 0:
                 allpossibilities.append(expr)
-
             return
         if expr[curr] == "|":
             find_abs(expr[:curr] + "abs(" + expr[curr + 1:], curr + 1, count + 1)
@@ -25,7 +49,6 @@ def preprocess_absolute(expr):
                 find_abs(expr[:curr] + ")" + expr[curr + 1:], curr + 1, count - 1)
         else:
             find_abs(expr, curr + 1, count)
-    ans = None
 
     find_abs(expr, 0, 0)
     for i in allpossibilities:
@@ -36,28 +59,45 @@ def preprocess_absolute(expr):
             pass
     return
 
+def custom_round(number, decimals=0):
+    multiplier = Decimal('1.' + '0' * decimals)  # Create a decimal
+    rounded_number = Decimal(str(number)).quantize(multiplier, rounding=ROUND_HALF_UP)
+    return float(rounded_number)
+
+
+def to_new_string(text):
+    """
+    Converts a given text to its superscript representation.
+    Only digits and a few characters are supported.
+    """
+    # Unicode superscript mapping
+    script_map = {
+        '⁰': '**0', '¹': '**1', '²': '**2', '³': '**3', '⁴': '**4',
+        '⁵': '**5', '⁶': '**6', '⁷': '**7', '⁸': '**8', '⁹': '**9', '{': '(', '[': '(', ']': ')', '}': ')', '^': '**', '×': '*', ':': '/', '$': '', '%': '', '−': '-', '°': ''
+    }
+
+    # Convert the input text using the mapping
+    return ''.join(script_map[char] if char in script_map else char for char in text)
+
+
 # Replacing stings
 def adjusted_string(calc):
     calc = calc.strip()
-    calc = calc.replace('{', '(')
-    calc = calc.replace('[', '(')
-    calc = calc.replace('}', ')')
-    calc = calc.replace(']', ')')
-    calc = calc.replace('^', '**')
-    calc = calc.replace('×', "*")
-    calc = calc.replace(':', '/')
-    calc = calc.replace("$", '')
-    calc = calc.replace('%', '')
-    calc = calc.replace("−", "-")
+    calc = to_new_string(calc)
+    calc.replace('sqrt', '√')
+    calc.replace('Sqrt', '√')
+    calc.replace('SQRT', '√')
+    calc = replace_square_root(calc)
     calc = preprocess_absolute(calc)
     return calc
 
 
-open_list = ["[", "{", "("]
-close_list = ["]", "}", ")"]
+
 
 # Function to check parentheses
 def balanced_parenthesis(myStr):
+    open_list = ["[", "{", "("]
+    close_list = ["]", "}", ")"]
     stack = []
     for i in myStr:
         if i in open_list:
@@ -90,7 +130,8 @@ def check_for_final_decimal(initial_value, final_value):
         if count_decimal_places(initial_value) > 2:
             if abs(initial_value) < 0.01:
                 return sigfig.round(initial_value, 2) == sigfig.round(final_value, 2)
-            return abs(initial_value - final_value) < 0.01
+
+            return custom_round(initial_value, 2) == custom_round(final_value, 2)
         else:
             return False
 def check_for_decimals(initial_value, final_value):
@@ -163,3 +204,57 @@ if st.button("Validate"):
                 st.markdown(f"<p style='color:orange;'>{step} ⚠ Invalid Format</p>", unsafe_allow_html=True)
     else:
         st.warning("Please enter some calculations to validate.")
+
+import streamlit as st
+from math import gcd
+
+
+def simplify_ratio(a, b):
+    # Find the greatest common divisor (GCD)
+    common_divisor = gcd(int(a * 1000000), int(b * 1000000))
+
+    # Simplify the ratio
+    simplified_a = int(a * 1000000) // common_divisor
+    simplified_b = int(b * 1000000) // common_divisor
+
+    return simplified_a, simplified_b
+
+
+# Streamlit UI
+st.title("Ratio Simplifier")
+
+# User input for floats as text and convert to float
+float1 = st.text_input("Numerator")
+float2 = st.text_input("Denominator")
+
+# Process inputs when both are entered
+if st.button("Calculate Simplified Ratio"):
+    if float1 and float2:
+        try:
+            # Convert the inputs to float
+            float1 = float(float1)
+            float2 = float(float2)
+
+            # Calculate simplified ratio
+            simplified_a, simplified_b = simplify_ratio(float1, float2)
+
+            # Display the simplified ratio
+            st.write(f"The simplified ratio of {float1} and {float2} is: {simplified_a}:{simplified_b}")
+        except ValueError:
+            st.error("Please enter valid numbers.")
+    else:
+        st.warning("Please enter both float values to calculate the ratio.")
+
+
+st.title("Text to Markdown Converter")
+
+# User input for text
+user_text = st.text_area("Enter text to convert to Markdown:")
+
+if st.button("Convert to Markdown"):
+    if user_text:
+        # Display converted text as Markdown
+        st.markdown(user_text)
+    else:
+        st.warning("Please enter some text to convert.")
+
