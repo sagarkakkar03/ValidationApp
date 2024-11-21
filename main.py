@@ -13,25 +13,50 @@ def count_decimal_places(num):
 def replace_square_root(expression):
     """
     Replaces square root symbols (√) in the expression with Python's '**0.5'.
+    Handles square roots with and without parentheses, and supports nested parentheses.
     """
     # Iterate through the expression to replace occurrences of √
     while '√' in expression:
         # Find the index of the square root symbol
         index = expression.find('√')
 
-        # Extract the number after the square root
-        start = index + 1  # Start after '√'
-        end = start
+        # Check if the square root has parentheses
+        if index + 1 < len(expression) and expression[index + 1] == '(':
+            # Use a stack to find the corresponding closing parenthesis
+            open_paren = index + 1
+            stack = []
+            close_paren = -1
 
-        # Find where the number ends (assume no space in between)
-        while end < len(expression) and (expression[end].isdigit() or expression[end] == '.'):
-            end += 1
+            # Traverse the expression after the '(' to find the matching ')'
+            for i in range(open_paren, len(expression)):
+                if expression[i] == '(':
+                    stack.append(i)  # Push the index of '(' onto the stack
+                elif expression[i] == ')':
+                    stack.pop()  # Pop the stack when encountering ')'
+                    if not stack:
+                        close_paren = i
+                        break
 
-        # Replace √N with (N)**0.5
-        number = expression[start:end]
-        expression = expression[:index] + f"({number})**0.5" + expression[end:]
+            # If a valid closing parenthesis is found
+            if close_paren != -1:
+                inner_expression = expression[open_paren + 1: close_paren]
+                # Replace √(inner_expression) with (inner_expression)**0.5
+                expression = expression[:index] + f"({inner_expression})**0.5" + expression[close_paren + 1:]
+        else:
+            # Handle the case where there are no parentheses after √
+            start = index + 1
+            end = start
+
+            # Find where the number ends (assume no space in between)
+            while end < len(expression) and (expression[end].isdigit() or expression[end] == '.'):
+                end += 1
+
+            # Replace √N with (N)**0.5
+            number = expression[start:end]
+            expression = expression[:index] + f"({number})**0.5" + expression[end:]
 
     return expression
+
 
 # Preprocess absolute
 def preprocess_absolute(expr):
@@ -210,12 +235,18 @@ from math import gcd
 
 
 def simplify_ratio(a, b):
+    # Convert inputs to Decimal for higher precision
+    # Scale both numbers to avoid floating point precision issues
+    scale = 10**6
+    a_scaled = int(a * scale)
+    b_scaled = int(b * scale)
+
     # Find the greatest common divisor (GCD)
-    common_divisor = gcd(int(a * 1000000), int(b * 1000000))
+    common_divisor = gcd(a_scaled, b_scaled)
 
     # Simplify the ratio
-    simplified_a = int(a * 1000000) // common_divisor
-    simplified_b = int(b * 1000000) // common_divisor
+    simplified_a = a_scaled // common_divisor
+    simplified_b = b_scaled // common_divisor
 
     return simplified_a, simplified_b
 
@@ -240,11 +271,12 @@ if st.button("Calculate Simplified Ratio"):
 
             # Display the simplified ratio
             st.write(f"The simplified ratio of {float1} and {float2} is: {simplified_a}:{simplified_b}")
+            # st.write(gcd(int(float1 * 10**20), int(float2 * 10**20)))
         except ValueError:
             st.error("Please enter valid numbers.")
     else:
         st.warning("Please enter both float values to calculate the ratio.")
-
+st.write("Note: Valid up to 8 decimal places.")
 
 st.title("Text to Markdown Converter")
 
