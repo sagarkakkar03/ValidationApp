@@ -2,7 +2,7 @@ import streamlit as st
 import sigfig
 from decimal import Decimal, ROUND_HALF_UP
 import re
-import pyperclip
+import clipboard
 
 # Define function to count decimal places
 def count_decimal_places(num):
@@ -129,7 +129,7 @@ def adjusted_string(calc):
     return calc
 
 def copy_to_clipboard():
-    pyperclip.copy(st.session_state.steps_input)
+    clipboard.copy(st.session_state.steps_input)
     st.toast("Copied to clipboard!")
 
 # Function to check parentheses
@@ -238,11 +238,12 @@ st.text_area("Enter your calculations:", value=st.session_state.steps_input, hei
 
 steps_input = st.session_state.steps_input
 # Button triggers the format function
-col1, col2 = st.columns([0.9, 0.1]) 
+col1, col2 = st.columns([0.9, 0.1])
 with col1:
     x = st.button("Validate", on_click=format_calculations, key="validate_button")
 with col2:
     st.button("📋", on_click=copy_to_clipboard, help="Copy to clipboard")
+
 
 if x:
     if steps_input.strip():
