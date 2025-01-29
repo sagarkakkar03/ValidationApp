@@ -19,7 +19,6 @@ def format_calculations():
     formatted_text = re.sub(r'\s*([+\-×/^/])\s*', r'\1', formatted_text)  # Remove spaces around operators
     formatted_text = re.sub(r'= ?(-?\d)', r'= \1', formatted_text)  # Ensure space after "="
     st.session_state.steps_input = formatted_text
-
     return formatted_text
 
 def replace_square_root(expression):
@@ -231,22 +230,20 @@ if "steps_input" not in st.session_state:
 
 st.write("Enter each step of your calculation in the format `expression = result` (e.g., `a + b = 47`). Separate steps with a newline.")
 
-# Use key to bind text_area to session_state
- # Create layout for text area + copy button
+
 
 st.text_area("Enter your calculations:", value=st.session_state.steps_input, height=200, key="steps_input")
 
 
 steps_input = st.session_state.steps_input
-# Button triggers the format function
 col1, col2 = st.columns([0.9, 0.1])
 with col1:
     x = st.button("Validate", on_click=format_calculations, key="validate_button")
 with col2:
-    st_copy_to_clipboard(st.session_state.steps_input)
-
-
+    if x:
+        st_copy_to_clipboard(st.session_state.steps_input)
 if x:
+    st_copy_to_clipboard(st.session_state.steps_input)
     if steps_input.strip():
         steps = steps_input.strip().split("\n")
         results = validate_steps_with_highlight(steps)
