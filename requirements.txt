@@ -1,4 +1,4 @@
 simpleeval
 sigfig
 streamlit
-pyperclip
+clipboard
