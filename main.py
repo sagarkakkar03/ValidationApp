@@ -243,7 +243,6 @@ with col2:
     if x:
         st_copy_to_clipboard(st.session_state.steps_input)
 if x:
-    st_copy_to_clipboard(st.session_state.steps_input)
     if steps_input.strip():
         steps = steps_input.strip().split("\n")
         results = validate_steps_with_highlight(steps)
