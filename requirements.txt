@@ -1,5 +1,4 @@
 simpleeval
 sigfig
 streamlit
-re
 st_copy_to_clipboard
