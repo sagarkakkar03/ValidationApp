@@ -1,6 +1,7 @@
 import streamlit as st
 import sigfig
 from decimal import Decimal, ROUND_HALF_UP
+import re
 
 # Define function to count decimal places
 def count_decimal_places(num):
@@ -9,6 +10,16 @@ def count_decimal_places(num):
         return len(num_str.split('.')[1])
     return 0
 
+
+def format_calculations():
+    formatted_text = re.sub(r'\*', '×', st.session_state.steps_input)  # Replace * with × for multiplication
+    formatted_text = re.sub(r'(\d),(\d)', r'\1\2', formatted_text)  # Remove commas within numbers
+    formatted_text = re.sub(r'\s*=\s*', ' = ', formatted_text)  # Ensure spacing around "="
+    formatted_text = re.sub(r'\s*([+\-×/^/])\s*', r'\1', formatted_text)  # Remove spaces around operators
+    formatted_text = re.sub(r'= ?(-?\d)', r'= \1', formatted_text)  # Ensure space after "="
+    st.session_state.steps_input = formatted_text
+
+    return formatted_text
 
 def replace_square_root(expression):
     """
@@ -212,10 +223,18 @@ def validate_steps_with_highlight(steps):
 # Streamlit Interface
 st.title("Step-by-Step Calculation Validator")
 
-st.write("Enter each step of your calculation in the format `expression = result` (e.g., `a + b = 47`). Separate steps with a newline.")
-steps_input = st.text_area("Enter your calculations:", height=200)
+if "steps_input" not in st.session_state:
+    st.session_state.steps_input = ""
 
-if st.button("Validate"):
+st.write("Enter each step of your calculation in the format `expression = result` (e.g., `a + b = 47`). Separate steps with a newline.")
+
+# Use key to bind text_area to session_state
+st.text_area("Enter your calculations:", value=st.session_state.steps_input, height=200, key="steps_input")
+steps_input = st.session_state.steps_input
+# Button triggers the format function
+x = st.button("Validate", on_click=format_calculations, key="validate_button")
+
+if x:
     if steps_input.strip():
         steps = steps_input.strip().split("\n")
         results = validate_steps_with_highlight(steps)
@@ -230,7 +249,7 @@ if st.button("Validate"):
     else:
         st.warning("Please enter some calculations to validate.")
 
-import streamlit as st
+
 from math import gcd
 
 
@@ -289,4 +308,3 @@ if st.button("Convert to Markdown"):
         st.markdown(user_text)
     else:
         st.warning("Please enter some text to convert.")
-
